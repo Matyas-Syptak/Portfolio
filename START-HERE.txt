@@ -1,0 +1,21 @@
+Design Portfolio
+Published version 15
+Source revision 62c7a5322e6ea37a4a7b40b7ad819d68f9daae6a
+
+This folder contains the published website files. index.html is the home page.
+
+Preview on your computer
+
+1. Extract the ZIP.
+2. Open a terminal in the extracted Design-Portfolio folder.
+3. Run python3 -m http.server 8000 (or py -m http.server 8000 on Windows).
+4. Open http://localhost:8000 in your browser.
+
+Host elsewhere
+
+Upload the contents of Design-Portfolio as your static site's root. Keep the
+styles, scripts, images, and games folders beside index.html. Serve the files
+over HTTP or HTTPS so the site can load its animation modules.
+
+The site loads its original typefaces from Google Fonts when online.
+Links to papers open their original sources. NightShift Drive uses WebGL 2.

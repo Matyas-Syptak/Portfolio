@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Get Slimed! — Slime Physics Platformer</title>
+  <style>
+    :root {
+      --bg0: #12091f;
+      --bg1: #241339;
+      --panel: rgba(21, 12, 34, 0.82);
+      --panel2: rgba(255, 255, 255, 0.08);
+      --text: #f7f1ff;
+      --muted: #c8b9dc;
+      --green: #61f28a;
+      --lime: #b7ff5a;
+      --violet: #7b4dff;
+      --cyan: #47e7ff;
+      --danger: #ff477e;
+      --gold: #ffd166;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 40% 0%, #32214b, var(--bg0) 58%, #06030a 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    #gameShell {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #12091f, #09030f);
+    }
+
+    canvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: #12091f;
+    }
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(96, 242, 138, 0.14), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(71, 231, 255, 0.11), transparent 30%),
+        linear-gradient(135deg, rgba(10, 5, 18, 0.94), rgba(29, 13, 48, 0.95));
+      z-index: 20;
+    }
+
+    .screen.active { display: flex; }
+
+    .menu-card {
+      width: min(820px, 96vw);
+      max-height: 92vh;
+      overflow: auto;
+      padding: clamp(22px, 4vw, 42px);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 32px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055));
+      box-shadow: 0 28px 100px var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .title-row {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .logo-slime {
+      width: 78px;
+      height: 62px;
+      border-radius: 55% 55% 46% 46%;
+      background: radial-gradient(circle at 34% 22%, rgba(255,255,255,0.95), transparent 14%), linear-gradient(150deg, #7fff9b, #2acb62);
+      box-shadow: inset -14px -15px 0 rgba(0,0,0,0.12), 0 18px 50px rgba(97,242,138,0.22);
+      position: relative;
+      animation: idleBlob 1.8s ease-in-out infinite;
+    }
+
+    .logo-slime::before, .logo-slime::after {
+      content: "";
+      position: absolute;
+      top: 24px;
+      width: 8px;
+      height: 12px;
+      border-radius: 50%;
+      background: #15101e;
+    }
+    .logo-slime::before { left: 25px; }
+    .logo-slime::after { right: 25px; }
+
+    @keyframes idleBlob {
+      0%, 100% { transform: scale(1, 1); }
+      50% { transform: scale(1.08, 0.94); }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3rem, 9vw, 6.2rem);
+      line-height: 0.84;
+      letter-spacing: -0.085em;
+    }
+
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 1.06rem;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .stat-box {
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.075);
+      border: 1px solid rgba(255,255,255,0.11);
+    }
+
+    .stat-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat-box strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.65rem;
+      letter-spacing: -0.04em;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      border-radius: 18px;
+      padding: 14px 19px;
+      font: inherit;
+      font-weight: 950;
+      color: #100a1a;
+      background: linear-gradient(135deg, var(--lime), var(--green));
+      box-shadow: 0 16px 45px rgba(97,242,138,0.19);
+      transition: transform 130ms ease, filter 130ms ease, opacity 130ms ease;
+    }
+
+    button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    button:active { transform: translateY(1px) scale(0.99); }
+
+    button.secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: none;
+    }
+
+    button.danger {
+      color: #fff;
+      background: linear-gradient(135deg, #ff477e, #ff8a3d);
+    }
+
+    .help-list {
+      margin: 16px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
+    .hud {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 10px;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .hud.active { display: flex; }
+
+    .hud-left, .hud-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .hud-pill {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(16, 8, 28, 0.76);
+      border: 1px solid rgba(255,255,255,0.13);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.18);
+      font-weight: 900;
+      color: var(--text);
+      backdrop-filter: blur(9px);
+      white-space: nowrap;
+    }
+
+    .hud button {
+      pointer-events: auto;
+      padding: 9px 12px;
+      border-radius: 999px;
+      box-shadow: none;
+    }
+
+    .mobile-controls {
+      position: fixed;
+      inset: auto 0 0 0;
+      z-index: 12;
+      display: none;
+      justify-content: space-between;
+      padding: 0 22px 22px;
+      pointer-events: none;
+    }
+
+    .mobile-controls.active { display: flex; }
+
+    .move-cluster {
+      display: flex;
+      gap: 14px;
+      pointer-events: auto;
+    }
+
+    .touch-btn {
+      width: 76px;
+      height: 76px;
+      display: grid;
+      place-items: center;
+      border-radius: 26px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: var(--text);
+      font-size: 2rem;
+      font-weight: 1000;
+      box-shadow: 0 18px 46px rgba(0,0,0,0.25);
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+    }
+
+    .touch-btn.jump {
+      width: 94px;
+      height: 94px;
+      border-radius: 32px;
+      background: rgba(97,242,138,0.20);
+    }
+
+    .orientation-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 116px;
+      transform: translateX(-50%);
+      z-index: 13;
+      display: none;
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: rgba(16,8,28,0.72);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--muted);
+      font-weight: 850;
+      backdrop-filter: blur(9px);
+    }
+
+    .zone-banner {
+      position: fixed;
+      left: 50%;
+      top: 82px;
+      transform: translateX(-50%) translateY(-14px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 8;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: rgba(12, 8, 20, 0.82);
+      border: 1px solid rgba(167, 255, 125, 0.38);
+      color: var(--text);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+      font-weight: 1000;
+      letter-spacing: -0.03em;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .zone-banner.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .orientation-hint.active { display: block; }
+
+    @media (max-width: 760px) {
+      .menu-grid { grid-template-columns: 1fr; }
+      .button-row { display: grid; }
+      .touch-btn { width: 68px; height: 68px; }
+      .touch-btn.jump { width: 84px; height: 84px; }
+      .hud { font-size: 0.86rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameShell">
+    <canvas id="gameCanvas" aria-label="Get Slimed canvas game"></canvas>
+  </div>
+
+  <div id="hud" class="hud">
+    <div class="hud-left">
+      <div class="hud-pill" id="scoreHud">Score 0</div>
+      <div class="hud-pill" id="sizeHud">Mass 10 | Size 1.00x</div>
+      <div class="hud-pill" id="heartHud">💚💚💚</div>
+      <div class="hud-pill" id="zoneHud">Zone 1 · Puddle Nursery</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-pill" id="dropHud">Drops 0</div>
+      <div class="hud-pill" id="enemyHud">Defeated 0</div>
+      <button id="pauseToMenuButton" class="secondary">Menu</button>
+    </div>
+  </div>
+
+  <div id="mobileControls" class="mobile-controls">
+    <div class="move-cluster">
+      <div class="touch-btn" data-touch="left">←</div>
+      <div class="touch-btn" data-touch="right">→</div>
+    </div>
+    <div class="touch-btn jump" data-touch="jump">↑</div>
+  </div>
+
+  <div id="orientationHint" class="orientation-hint">Best played in landscape</div>
+  <div id="zoneBanner" class="zone-banner">New slime zone reached</div>
+
+  <section id="menuScreen" class="screen active">
+    <div class="menu-card">
+      <div class="title-row">
+        <div class="logo-slime"></div>
+        <div>
+          <h1>Get Slimed!</h1>
+          <p class="subtitle">A soft-body-feeling slime platformer. Grow, bounce, stomp rival slimes, and absorb their SlimeDrops.</p>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <div class="stat-box"><span>Best Score</span><strong id="bestScoreText">0</strong></div>
+        <div class="stat-box"><span>Best Size</span><strong id="bestSizeText">1.00x</strong></div>
+        <div class="stat-box"><span>Best Defeats</span><strong id="bestDefeatsText">0</strong></div>
+      </div>
+
+      <div class="button-row">
+        <button id="playButton">Play</button>
+        <button id="howButton" class="secondary">How to Play</button>
+        <button id="resetButton" class="danger">Reset Best Score</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="helpScreen" class="screen">
+    <div class="menu-card">
+      <h1 style="font-size: clamp(2.2rem, 6vw, 4rem);">How to Play</h1>
+      <ul class="help-list">
+        <li><strong>Move:</strong> A/D or Arrow Keys. On phone, use the left/right buttons.</li>
+        <li><strong>Jump:</strong> W, Space, Up Arrow, or the mobile jump button.</li>
+        <li><strong>Collect SlimeDrops</strong> of size 1-5. Starting mass is 10; each drop adds half its shown value: 1 = +0.5 mass, 5 = +2.5 mass. Missing hearts are restored by collecting drops, not by waiting.</li>
+        <li><strong>Stomp enemy slimes from above.</strong> Only a clearly larger attacker, at least 1.5x the victim's size, gets a 1-stomp kill. Similar = 2 stomps. Smaller = 3 stomps.</li>
+        <li><strong>Watch the eyes.</strong> Cross eyes mean a hit landed. A defeated slime bursts into SlimeDrops.</li>
+        <li><strong>Survive.</strong> Big enemy slimes are rare early, then become more common as your mass pushes you into new Spore-like scale zones.</li>
+      </ul>
+      <div class="button-row">
+        <button id="helpPlayButton">Play</button>
+        <button id="helpBackButton" class="secondary">Back</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="gameOverScreen" class="screen">
+    <div class="menu-card">
+      <h1 style="font-size: clamp(2.6rem, 8vw, 5.4rem);">Slime Splattered</h1>
+      <p class="subtitle" id="gameOverSummary">Final stats appear here.</p>
+      <div class="menu-grid">
+        <div class="stat-box"><span>Score</span><strong id="finalScoreText">0</strong></div>
+        <div class="stat-box"><span>Size Reached</span><strong id="finalSizeText">1.00x</strong></div>
+        <div class="stat-box"><span>Time</span><strong id="finalTimeText">0s</strong></div>
+        <div class="stat-box"><span>Drops</span><strong id="finalDropsText">0</strong></div>
+        <div class="stat-box"><span>Defeated</span><strong id="finalDefeatsText">0</strong></div>
+        <div class="stat-box"><span>Best Score</span><strong id="finalBestText">0</strong></div>
+      </div>
+      <div class="button-row">
+        <button id="againButton">Play Again</button>
+        <button id="overMenuButton" class="secondary">Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    "use strict";
+
+    /**********************************************************************
+     * Get Slimed!
+     * A single-file canvas game. The important part is not realistic soft
+     * body physics; it is a strong illusion of softness using collision
+     * physics + squash/stretch + wobble + impact feedback.
+     **********************************************************************/
+
+    const CONFIG = {
+      gravity: 1550,
+      groundFriction: 0.84,
+      airDrag: 0.992,
+      baseRadius: 28,
+      baseBioMass: 10,
+      maxEnemiesBase: 7,
+      spawnSafeDistance: 580,
+      worldMinX: -9000,
+      worldMaxX: 9000,
+      // Growth zones are inspired by the early Spore-style feeling where huge
+      // lifeforms are first background threats, then later become the normal
+      // scale of play. The thresholds are mass-based, not score-based.
+      growthZones: [
+        { name: "Puddle Nursery", minMass: 10, largeChance: 0.04, bigMin: 1.14, bigMax: 1.26, maxEnemiesBonus: 0 },
+        { name: "Gloop Meadow", minMass: 34, largeChance: 0.09, bigMin: 1.18, bigMax: 1.34, maxEnemiesBonus: 1 },
+        { name: "Ooze Reefs", minMass: 75, largeChance: 0.14, bigMin: 1.20, bigMax: 1.46, maxEnemiesBonus: 2 },
+        { name: "Titan Slimefield", minMass: 130, largeChance: 0.19, bigMin: 1.22, bigMax: 1.58, maxEnemiesBonus: 3 }
+      ]
+    };
+
+    const Util = {
+      clamp(value, min, max) { return Math.max(min, Math.min(max, value)); },
+      lerp(a, b, t) { return a + (b - a) * t; },
+      rand(min, max) { return min + Math.random() * (max - min); },
+      choice(list) { return list[Math.floor(Math.random() * list.length)]; },
+      dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); },
+      sign(value) { return value < 0 ? -1 : 1; },
+      weightedDropValue() {
+        // SlimeDrop sizes are intentionally weighted: 1 is common, 5 is rare.
+        const roll = Math.random();
+        if (roll < 0.52) return 1;
+        if (roll < 0.76) return 2;
+        if (roll < 0.90) return 3;
+        if (roll < 0.98) return 4;
+        return 5;
+      },
+      radiusFromBioMass(massValue) {
+        // Starting mass 10 maps to the starting slime radius.
+        return CONFIG.baseRadius * Math.sqrt(Math.max(1, massValue) / CONFIG.baseBioMass);
+      },
+      bioMassFromRadius(radius) {
+        return CONFIG.baseBioMass * Math.pow(radius / CONFIG.baseRadius, 2);
+      },
+      zoneForMass(massValue) {
+        let zoneIndex = 0;
+        for (let i = 0; i < CONFIG.growthZones.length; i++) {
+          if (massValue >= CONFIG.growthZones[i].minMass) zoneIndex = i;
+        }
+        return zoneIndex;
+      },
+      currentZone(massValue) {
+        return CONFIG.growthZones[this.zoneForMass(massValue)];
+      }
+    };
+
+    /**********************************************************************
+     * Save System
+     **********************************************************************/
+    class SaveSystem {
+      constructor() {
+        this.key = "get_slimed_best_v1";
+        this.data = this.load();
+      }
+
+      load() {
+        try {
+          const raw = localStorage.getItem(this.key);
+          if (!raw) return { bestScore: 0, bestSize: 1, bestDefeats: 0 };
+          const parsed = JSON.parse(raw);
+          return {
+            bestScore: Number(parsed.bestScore) || 0,
+            bestSize: Number(parsed.bestSize) || 1,
+            bestDefeats: Number(parsed.bestDefeats) || 0
+          };
+        } catch (error) {
+          return { bestScore: 0, bestSize: 1, bestDefeats: 0 };
+        }
+      }
+
+      saveRun(score, size, defeats) {
+        this.data.bestScore = Math.max(this.data.bestScore, Math.floor(score));
+        this.data.bestSize = Math.max(this.data.bestSize, size);
+        this.data.bestDefeats = Math.max(this.data.bestDefeats, defeats);
+        localStorage.setItem(this.key, JSON.stringify(this.data));
+      }
+
+      reset() {
+        this.data = { bestScore: 0, bestSize: 1, bestDefeats: 0 };
+        localStorage.setItem(this.key, JSON.stringify(this.data));
+      }
+    }
+
+    /**********************************************************************
+     * Input Manager
+     **********************************************************************/
+    class InputManager {
+      constructor() {
+        this.left = false;
+        this.right = false;
+        this.jump = false;
+        this.jumpPressed = false;
+        this._lastJump = false;
+        this.isTouchDevice = matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
+
+        window.addEventListener("keydown", (event) => this.setKey(event, true));
+        window.addEventListener("keyup", (event) => this.setKey(event, false));
+
+        document.querySelectorAll("[data-touch]").forEach((button) => {
+          const action = button.getAttribute("data-touch");
+          const set = (value) => {
+            if (action === "left") this.left = value;
+            if (action === "right") this.right = value;
+            if (action === "jump") this.jump = value;
+          };
+          button.addEventListener("pointerdown", (event) => { event.preventDefault(); set(true); });
+          button.addEventListener("pointerup", (event) => { event.preventDefault(); set(false); });
+          button.addEventListener("pointercancel", () => set(false));
+          button.addEventListener("pointerleave", () => set(false));
+        });
+      }
+
+      setKey(event, down) {
+        const key = event.key.toLowerCase();
+        if (["arrowleft", "a"].includes(key)) this.left = down;
+        if (["arrowright", "d"].includes(key)) this.right = down;
+        if (["arrowup", "w", " "].includes(key)) {
+          event.preventDefault();
+          this.jump = down;
+        }
+      }
+
+      update() {
+        this.jumpPressed = this.jump && !this._lastJump;
+        this._lastJump = this.jump;
+      }
+
+      releaseAll() {
+        this.left = false;
+        this.right = false;
+        this.jump = false;
+        this.jumpPressed = false;
+        this._lastJump = false;
+      }
+    }
+
+    /**********************************************************************
+     * Camera
+     **********************************************************************/
+    class CameraSystem {
+      constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.shake = 0;
+      }
+
+      update(dt, target, canvas) {
+        const desiredX = target.x - canvas.width * 0.42;
+        const desiredY = target.y - canvas.height * 0.56;
+        this.x = Util.lerp(this.x, desiredX, 1 - Math.pow(0.001, dt));
+        this.y = Util.lerp(this.y, desiredY, 1 - Math.pow(0.006, dt));
+        this.y = Util.clamp(this.y, -260, 420);
+        this.shake *= Math.pow(0.02, dt);
+      }
+
+      addShake(amount) {
+        this.shake = Math.max(this.shake, amount);
+      }
+
+      screenX(worldX) {
+        return worldX - this.x + (Math.random() - 0.5) * this.shake;
+      }
+
+      screenY(worldY) {
+        return worldY - this.y + (Math.random() - 0.5) * this.shake;
+      }
+    }
+
+    /**********************************************************************
+     * Audio System - tiny WebAudio blips, no external assets.
+     **********************************************************************/
+    class AudioSystem {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      ensure() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      }
+
+      blip(freq = 440, duration = 0.06, type = "sine", volume = 0.045) {
+        if (!this.enabled) return;
+        this.ensure();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+    }
+
+    /**********************************************************************
+     * Terrain - side-scrolling soft hills. The ground is a mathematical
+     * surface so the world can extend without needing hand-made art.
+     **********************************************************************/
+    class Terrain {
+      groundY(x) {
+        return 448
+          + Math.sin(x * 0.0032) * 42
+          + Math.sin(x * 0.0105 + 1.7) * 16
+          + Math.sin(x * 0.0011 - 3.2) * 62;
+      }
+
+      slopeAt(x) {
+        return (this.groundY(x + 2) - this.groundY(x - 2)) / 4;
+      }
+
+      drawDistantSlimes(ctx, camera, canvas, zoneIndex) {
+        const count = 5;
+        for (let i = 0; i < count; i++) {
+          const worldAnchor = i * 980 - 2100;
+          const sx = ((worldAnchor - camera.x * 0.12) % (canvas.width + 1400)) - 500;
+          const tierGap = 1 + ((i + zoneIndex) % 3);
+          const rx = 95 + tierGap * 48 + (i % 2) * 28;
+          const ry = rx * (0.48 + tierGap * 0.08);
+          const sy = canvas.height * (0.56 + (i % 3) * 0.055);
+          const hue = i % 2 ? "rgba(80, 255, 150, 0.12)" : "rgba(95, 220, 255, 0.10)";
+
+          ctx.save();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = hue;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, rx, ry, Math.sin(i * 2.1) * 0.08, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Small eye glints make them read as living threats, not hills.
+          ctx.globalAlpha = 0.10;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(sx - rx * 0.20, sy - ry * 0.22, Math.max(3, rx * 0.035), 0, Math.PI * 2);
+          ctx.arc(sx + rx * 0.05, sy - ry * 0.25, Math.max(3, rx * 0.035), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      draw(ctx, camera, canvas, zoneIndex = 0) {
+        const startX = camera.x - 100;
+        const endX = camera.x + canvas.width + 100;
+        const step = 22;
+
+        // Background gradient sky/cave.
+        const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        bg.addColorStop(0, "#1e1035");
+        bg.addColorStop(0.55, "#15102b");
+        bg.addColorStop(1, "#0a0713");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Parallax soft blobs.
+        for (let i = -4; i < 15; i++) {
+          const bx = ((i * 260 - camera.x * 0.22) % (canvas.width + 340)) - 170;
+          const by = 120 + Math.sin(i * 3.1) * 45;
+          ctx.globalAlpha = 0.12;
+          ctx.fillStyle = i % 2 ? "#60f28a" : "#47e7ff";
+          ctx.beginPath();
+          ctx.ellipse(bx, by, 52 + (i % 4) * 9, 22 + (i % 3) * 6, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // Distant non-interactive giant slimes. This creates the Spore-like scale
+        // feeling: huge lifeforms are present as background pressure before they
+        // become normal interactive enemies in later growth zones.
+        this.drawDistantSlimes(ctx, camera, canvas, zoneIndex);
+
+        // Far hills.
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        for (let sx = -50; sx <= canvas.width + 50; sx += 30) {
+          const wx = sx + camera.x * 0.4;
+          const y = canvas.height * 0.62 + Math.sin(wx * 0.004) * 38 + Math.sin(wx * 0.009) * 18;
+          ctx.lineTo(sx, y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(48, 97, 70, 0.25)";
+        ctx.fill();
+
+        // Main ground body.
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height + 50);
+        for (let wx = startX; wx <= endX; wx += step) {
+          ctx.lineTo(wx - camera.x, this.groundY(wx) - camera.y);
+        }
+        ctx.lineTo(canvas.width + 80, canvas.height + 50);
+        ctx.closePath();
+        const groundGradient = ctx.createLinearGradient(0, canvas.height * 0.55, 0, canvas.height);
+        groundGradient.addColorStop(0, "#245e3f");
+        groundGradient.addColorStop(0.18, "#173c31");
+        groundGradient.addColorStop(1, "#0a0713");
+        ctx.fillStyle = groundGradient;
+        ctx.fill();
+
+        // Mossy slime grass edge.
+        ctx.beginPath();
+        for (let wx = startX; wx <= endX; wx += 12) {
+          const y = this.groundY(wx) - camera.y;
+          const sx = wx - camera.x;
+          if (wx === startX) ctx.moveTo(sx, y);
+          else ctx.lineTo(sx, y);
+        }
+        ctx.strokeStyle = "rgba(132, 255, 132, 0.82)";
+        ctx.lineWidth = 5;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        // Slime puddles/highlights on ground.
+        for (let i = Math.floor(startX / 260) - 1; i < Math.ceil(endX / 260) + 1; i++) {
+          const wx = i * 260 + Math.sin(i * 7.7) * 55;
+          const wy = this.groundY(wx) + 5;
+          ctx.globalAlpha = 0.24;
+          ctx.fillStyle = i % 2 ? "#73ff9d" : "#47e7ff";
+          ctx.beginPath();
+          ctx.ellipse(wx - camera.x, wy - camera.y, 34 + (i % 5) * 3, 7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    /**********************************************************************
+     * Particles
+     **********************************************************************/
+    class Particle {
+      constructor(x, y, options = {}) {
+        this.x = x;
+        this.y = y;
+        this.vx = options.vx ?? Util.rand(-90, 90);
+        this.vy = options.vy ?? Util.rand(-140, -40);
+        this.life = options.life ?? Util.rand(0.3, 0.8);
+        this.maxLife = this.life;
+        this.radius = options.radius ?? Util.rand(3, 8);
+        this.color = options.color ?? "#72ff9b";
+        this.gravity = options.gravity ?? 480;
+      }
+
+      update(dt) {
+        this.life -= dt;
+        this.vy += this.gravity * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+      }
+
+      draw(ctx, camera) {
+        const alpha = Util.clamp(this.life / this.maxLife, 0, 1);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(camera.screenX(this.x), camera.screenY(this.y), this.radius * (0.7 + alpha * 0.3), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    class ParticleSystem {
+      constructor() { this.particles = []; }
+
+      splash(x, y, color, amount = 10, force = 1) {
+        for (let i = 0; i < amount; i++) {
+          this.particles.push(new Particle(x, y, {
+            vx: Util.rand(-170, 170) * force,
+            vy: Util.rand(-210, -40) * force,
+            radius: Util.rand(2.5, 7.5),
+            color,
+            gravity: 760,
+            life: Util.rand(0.32, 0.78)
+          }));
+        }
+      }
+
+      burst(x, y, color, amount = 18) {
+        for (let i = 0; i < amount; i++) {
+          const angle = Util.rand(0, Math.PI * 2);
+          const speed = Util.rand(80, 360);
+          this.particles.push(new Particle(x, y, {
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 80,
+            radius: Util.rand(3, 9),
+            color,
+            gravity: 620,
+            life: Util.rand(0.45, 1.1)
+          }));
+        }
+      }
+
+      update(dt) {
+        for (const p of this.particles) p.update(dt);
+        this.particles = this.particles.filter((p) => p.life > 0);
+      }
+
+      draw(ctx, camera) {
+        for (const p of this.particles) p.draw(ctx, camera);
+      }
+    }
+
+    /**********************************************************************
+     * SlimeDrop - collectible growth energy.
+     **********************************************************************/
+    class SlimeDrop {
+      constructor(x, y, value = 1, color = "#86ff74") {
+        this.x = x;
+        this.y = y;
+        this.vx = Util.rand(-90, 90);
+        this.vy = Util.rand(-220, -60);
+        this.value = Math.max(1, Math.min(5, Math.round(value)));
+        this.radius = 6.5 + this.value * 2.45;
+        this.color = color;
+        this.phase = Util.rand(0, Math.PI * 2);
+        this.collected = false;
+      }
+
+      update(dt, game) {
+        if (this.collected) return;
+
+        const player = game.player;
+        const d = Util.dist(this.x, this.y, player.x, player.y);
+
+        // Magnetic pickup when close.
+        if (d < player.radius + 105) {
+          const pull = (1 - d / (player.radius + 105)) * 780;
+          this.vx += ((player.x - this.x) / Math.max(d, 1)) * pull * dt;
+          this.vy += ((player.y - this.y) / Math.max(d, 1)) * pull * dt;
+        } else {
+          this.vy += CONFIG.gravity * 0.45 * dt;
+        }
+
+        this.vx *= Math.pow(0.94, dt * 60);
+        this.vy *= Math.pow(0.985, dt * 60);
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        const ground = game.terrain.groundY(this.x);
+        if (this.y + this.radius > ground) {
+          this.y = ground - this.radius;
+          this.vy *= -0.28;
+          this.vx *= 0.88;
+        }
+
+        if (d < player.radius + this.radius) {
+          this.collected = true;
+          player.collectDrop(this.value, game);
+        }
+      }
+
+      draw(ctx, camera, time) {
+        if (this.collected) return;
+        const sx = camera.screenX(this.x);
+        const sy = camera.screenY(this.y + Math.sin(time * 5 + this.phase) * 2);
+        ctx.save();
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 14;
+        const grad = ctx.createRadialGradient(sx - this.radius * 0.3, sy - this.radius * 0.35, 1, sx, sy, this.radius * 1.3);
+        grad.addColorStop(0, "#ffffff");
+        grad.addColorStop(0.28, this.color);
+        grad.addColorStop(1, "rgba(50, 210, 100, 0.35)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, this.radius * 0.88, this.radius * 1.12, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Small value label makes size 1-5 drops readable without extra UI.
+        if (this.value >= 2) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "rgba(15, 18, 28, 0.74)";
+          ctx.font = `900 ${Math.max(9, this.radius * 0.82)}px system-ui, sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(String(this.value), sx, sy + 0.5);
+        }
+        ctx.restore();
+      }
+    }
+
+    /**********************************************************************
+     * Slime Entity - base class for player and enemies.
+     **********************************************************************/
+    class SlimeEntity {
+      constructor(options) {
+        this.x = options.x;
+        this.y = options.y;
+        this.vx = options.vx || 0;
+        this.vy = options.vy || 0;
+        this.radius = options.radius || CONFIG.baseRadius;
+        this.baseRadius = options.baseRadius || CONFIG.baseRadius;
+        this.color = options.color || "#62f28a";
+        this.darkColor = options.darkColor || "#249a55";
+        this.isPlayer = Boolean(options.isPlayer);
+        this.grounded = false;
+        this.facing = 1;
+        this.squash = 0;
+        this.stretch = 0;
+        this.wobble = Util.rand(0, Math.PI * 2);
+        this.wobbleEnergy = 0.08;
+        this.sideSquish = 0;
+        this.gelKickX = 0;
+        this.stunned = 0;
+        this.invincible = 0;
+        this.hitTokens = 0;
+        this.eyeCrossTimer = 0;
+        this.dead = false;
+        this.lastGrounded = false;
+        // Jump responsiveness helpers. These are tiny timers inside the normal
+        // game loop, not background timers.
+        // - jumpBufferTimer remembers a jump press briefly before landing.
+        // - coyoteTimer allows a jump just after leaving ground.
+        // - groundContactTimer lets a bouncy slime jump on the exact frame it
+        //   touches ground, even if landing rebound lifts it again.
+        this.jumpBufferTimer = 0;
+        this.coyoteTimer = 0;
+        this.groundContactTimer = 0;
+        this.lastStompTimes = new Map();
+      }
+
+      get sizeScale() {
+        return this.radius / this.baseRadius;
+      }
+
+      get mass() {
+        return this.radius * this.radius;
+      }
+
+      get maxSpeed() {
+        // Important feel change: growing should not make the game boring.
+        // Large slimes still feel heavier through mass, landing impact, and pushback,
+        // but their top movement speed is not punished.
+        return 300;
+      }
+
+      get acceleration() {
+        // Keep acceleration lively at all sizes. A very small scaling penalty made
+        // larger blobs feel slow instead of powerful, so this stays constant.
+        return 1950;
+      }
+
+      get jumpPower() {
+        // Do not reduce bounce as the slime grows. Bigger slimes actually need a
+        // slightly stronger impulse to clear same-zone enemies because their own
+        // body and enemy bodies are taller.
+        return Math.max(820, Math.sqrt(2 * CONFIG.gravity * (this.radius * 3.35 + 58)));
+      }
+
+      applyMovement(dt, intent, game) {
+        if (this.stunned > 0) intent = { move: 0, jump: false };
+        const groundControl = this.grounded ? 1 : 0.58;
+        this.vx += intent.move * this.acceleration * groundControl * dt;
+
+        const speedCap = this.maxSpeed;
+        this.vx = Util.clamp(this.vx, -speedCap, speedCap);
+
+        if (Math.abs(intent.move) > 0.01) {
+          this.facing = Util.sign(intent.move);
+          this.stretch += Math.abs(intent.move) * 0.018;
+          this.wobbleEnergy += 0.007;
+        }
+
+        if (intent.jump && (this.grounded || intent.allowCoyote || this.groundContactTimer > 0)) {
+          this.vy = -this.jumpPower;
+          this.grounded = false;
+          this.groundContactTimer = 0;
+          this.coyoteTimer = 0;
+          this.jumpBufferTimer = 0;
+          this.stretch += 0.24;
+          this.squash -= 0.055;
+          this.wobbleEnergy += 0.12;
+          game.particles.splash(this.x, this.y + this.radius, this.color, 6, 0.48);
+          game.audio.blip(240 + this.radius * 2.2, 0.06, "sine", 0.035);
+        }
+      }
+
+      physicsStep(dt, game) {
+        if (this.dead) return;
+        this.stunned = Math.max(0, this.stunned - dt);
+        this.invincible = Math.max(0, this.invincible - dt);
+        this.eyeCrossTimer = Math.max(0, this.eyeCrossTimer - dt);
+        this.groundContactTimer = Math.max(0, this.groundContactTimer - dt);
+
+        this.vy += CONFIG.gravity * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        this.x = Util.clamp(this.x, CONFIG.worldMinX, CONFIG.worldMaxX);
+
+        this.lastGrounded = this.grounded;
+        this.grounded = false;
+        const ground = game.terrain.groundY(this.x);
+        const bottom = this.y + this.radius;
+
+        if (bottom >= ground) {
+          const impactSpeed = Math.max(0, this.vy);
+          this.groundContactTimer = 0.10;
+          this.y = ground - this.radius;
+          this.grounded = true;
+
+          if (!this.lastGrounded && impactSpeed > 160) {
+            // Jelly contact response: first the slime visibly compresses into the
+            // surface, then it rebounds a little instead of stopping dead.
+            const impact = Util.clamp((impactSpeed / 850) * (0.78 + this.sizeScale * 0.16), 0.08, 0.46);
+            this.squash += impact;
+            this.stretch -= impact * 0.18;
+            this.wobbleEnergy += impact * 0.34;
+
+            const rebound = Util.clamp(impactSpeed * 0.045 / Math.sqrt(this.sizeScale), 12, 72);
+            if (impactSpeed > 420) {
+              this.vy = -rebound;
+              this.y -= 1.5;
+              this.grounded = false;
+            } else {
+              this.vy = 0;
+            }
+
+            game.particles.splash(this.x, ground - 2, this.color, Math.floor(5 + impact * 10), 0.48 + impact * 0.28);
+            if (this.isPlayer && impact > 0.22) game.camera.addShake(impact * 2.4);
+            game.audio.blip(75 + impact * 95, 0.045, "triangle", 0.024);
+          } else {
+            this.vy = 0;
+          }
+        }
+
+        if (this.grounded) {
+          const slope = game.terrain.slopeAt(this.x);
+          this.vx += slope * 170 * dt;
+          this.vx *= Math.pow(CONFIG.groundFriction, dt * 60);
+          if (Math.abs(this.vx) < 2) this.vx = 0;
+        } else {
+          this.vx *= Math.pow(CONFIG.airDrag, dt * 60);
+          if (this.vy > 80) this.stretch += 0.007;
+        }
+
+        // Soft-body visual recovery.
+        this.squash = Util.lerp(this.squash, 0, 1 - Math.pow(0.004, dt));
+        this.stretch = Util.lerp(this.stretch, 0, 1 - Math.pow(0.004, dt));
+        this.sideSquish = Util.lerp(this.sideSquish, 0, 1 - Math.pow(0.004, dt));
+        this.gelKickX = Util.lerp(this.gelKickX, 0, 1 - Math.pow(0.009, dt));
+        this.wobbleEnergy = Util.lerp(this.wobbleEnergy, 0.035, 1 - Math.pow(0.018, dt));
+        this.wobble += dt * (3.8 + Math.abs(this.vx) / 95 + this.wobbleEnergy * 3.2);
+      }
+
+      takeStomp(attacker, game) {
+        if (this.dead || this.invincible > 0) return false;
+        const required = CombatSystem.hitsRequired(attacker, this);
+        const tokenGain = required === 1 ? 3 : required === 2 ? 1.5 : 1;
+
+        this.hitTokens += tokenGain;
+        this.eyeCrossTimer = 0.34;
+        this.stunned = 0.42;
+        this.squash += 0.46;
+        this.sideSquish += 0.10;
+        this.wobbleEnergy += 0.38;
+        this.vx += (this.x - attacker.x) * 1.75;
+        this.vy = -185;
+        game.particles.splash(this.x, this.y - this.radius * 0.2, this.color, 10, 0.62);
+        game.audio.blip(150, 0.075, "square", 0.035);
+
+        if (this.hitTokens >= 3) {
+          this.dieIntoDrops(game, attacker);
+          return true;
+        }
+        return false;
+      }
+
+      dieIntoDrops(game, attacker) {
+        this.dead = true;
+        game.particles.burst(this.x, this.y, this.color, 25);
+        const count = Math.floor(Util.clamp(this.radius / 4, 5, 20));
+        for (let i = 0; i < count; i++) {
+          const dropValue = Util.weightedDropValue();
+          const drop = new SlimeDrop(this.x + Util.rand(-this.radius * 0.4, this.radius * 0.4), this.y, dropValue, this.color);
+          drop.vx += Util.rand(-220, 220);
+          drop.vy += Util.rand(-260, -80);
+          game.drops.push(drop);
+        }
+        if (attacker && attacker.isPlayer) {
+          game.defeats += 1;
+          game.score += 50 + Math.floor(this.radius * 1.4);
+        }
+        game.audio.blip(72, 0.14, "sawtooth", 0.045);
+      }
+
+      draw(ctx, camera, time) {
+        if (this.dead) return;
+        const sx = camera.screenX(this.x);
+        const sy = camera.screenY(this.y);
+
+        const speedStretch = Util.clamp(Math.abs(this.vx) / 900, 0, 0.14);
+        const fallStretch = Util.clamp(this.vy / 1200, 0, 0.16);
+        const visualSquash = Util.clamp(this.squash, -0.12, 0.42);
+        const visualStretch = Util.clamp(this.stretch + fallStretch, -0.05, 0.30);
+        const visualSideSquish = Util.clamp(this.sideSquish, 0, 0.24);
+
+        const scaleX = 1 + visualSquash * 0.62 + speedStretch * 0.34 - visualStretch * 0.12 - visualSideSquish * 0.26;
+        const scaleY = 1 - visualSquash * 0.36 + visualStretch * 0.76 + visualSideSquish * 0.16;
+        const lean = Util.clamp((this.vx + this.gelKickX) / 820, -0.22, 0.22);
+
+        ctx.save();
+        ctx.translate(sx + this.gelKickX * 0.018, sy);
+        ctx.rotate(lean * 0.07);
+        ctx.scale(scaleX, scaleY);
+
+        // Blob outline with wobbling surface points.
+        const pointCount = 32;
+        ctx.beginPath();
+        for (let i = 0; i <= pointCount; i++) {
+          const a = (i / pointCount) * Math.PI * 2;
+          const wobble = Math.sin(a * 3 + this.wobble) * this.wobbleEnergy * this.radius * 0.20
+                       + Math.sin(a * 5 - this.wobble * 0.7) * this.wobbleEnergy * this.radius * 0.08;
+          const r = this.radius + wobble;
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r * 0.92;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+
+        const grad = ctx.createRadialGradient(-this.radius * 0.35, -this.radius * 0.42, 3, 0, 0, this.radius * 1.45);
+        grad.addColorStop(0, "rgba(255,255,255,0.92)");
+        grad.addColorStop(0.18, this.color);
+        grad.addColorStop(1, this.darkColor);
+        ctx.fillStyle = grad;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = this.isPlayer ? 22 : 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255,255,255,0.20)";
+        ctx.lineWidth = Math.max(2, this.radius * 0.045);
+        ctx.stroke();
+
+        // Gloss highlight.
+        ctx.globalAlpha = 0.34;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(-this.radius * 0.32, -this.radius * 0.38, this.radius * 0.28, this.radius * 0.16, -0.55, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Eyes lag opposite velocity for a soft internal feeling.
+        const eyeLagX = Util.clamp(-this.vx / 90, -5, 5);
+        const eyeLagY = Util.clamp(-this.vy / 140, -5, 7);
+        const eyeY = -this.radius * 0.18 + eyeLagY;
+        const eyeSep = this.radius * 0.34;
+        this.drawEye(ctx, -eyeSep + eyeLagX, eyeY, this.radius * 0.13, this.eyeCrossTimer > 0);
+        this.drawEye(ctx, eyeSep + eyeLagX, eyeY, this.radius * 0.13, this.eyeCrossTimer > 0 || this.hitTokens >= 2.2);
+
+        // Damage marks make multi-stomp enemies readable.
+        if (this.hitTokens > 0 && !this.isPlayer) {
+          ctx.strokeStyle = "rgba(40,20,40,0.35)";
+          ctx.lineWidth = 3 / Math.max(0.8, scaleX);
+          const marks = Math.floor(this.hitTokens);
+          for (let m = 0; m < marks; m++) {
+            const mx = -this.radius * 0.42 + m * this.radius * 0.27;
+            const my = this.radius * 0.20 + Math.sin(time * 4 + m) * 2;
+            ctx.beginPath();
+            ctx.moveTo(mx - 5, my - 5);
+            ctx.lineTo(mx + 5, my + 5);
+            ctx.moveTo(mx + 5, my - 5);
+            ctx.lineTo(mx - 5, my + 5);
+            ctx.stroke();
+          }
+        }
+
+        ctx.restore();
+      }
+
+      drawEye(ctx, x, y, r, crossed) {
+        ctx.save();
+        ctx.lineCap = "round";
+        if (crossed) {
+          ctx.strokeStyle = "#18111f";
+          ctx.lineWidth = Math.max(3, r * 0.5);
+          ctx.beginPath();
+          ctx.moveTo(x - r, y - r);
+          ctx.lineTo(x + r, y + r);
+          ctx.moveTo(x + r, y - r);
+          ctx.lineTo(x - r, y + r);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "rgba(255,255,255,0.94)";
+          ctx.beginPath();
+          ctx.arc(x, y, r * 1.08, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#17101e";
+          ctx.beginPath();
+          ctx.arc(x + r * 0.16, y + r * 0.08, r * 0.48, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    class PlayerSlime extends SlimeEntity {
+      constructor(x, y) {
+        super({ x, y, radius: CONFIG.baseRadius, color: "#68ff90", darkColor: "#1fb85a", isPlayer: true });
+        this.bioMass = CONFIG.baseBioMass;
+        this.growthEnergy = 0; // kept as a readable alias for total collected mass this run
+        this.dropsCollected = 0;
+        this.massCollected = 0;
+
+        // No passive time healing. Health comes from collecting SlimeDrops.
+        // healEnergy stores partial healing from drops: 2.5 healing slime = +1 heart.
+        // It is cheap: just a number updated during existing collection logic.
+        this.maxHearts = 3;
+        this.hearts = this.maxHearts;
+        this.healEnergy = 0;
+        this.healNeededPerHeart = 2.5;
+        this.regenPulse = 0; // small visual pulse when a drop restores a heart
+
+        this.maxRadius = 112;
+        this.growthPulse = 0;
+      }
+
+      update(dt, game) {
+        const move = (game.input.left ? -1 : 0) + (game.input.right ? 1 : 0);
+
+        // Responsive jump handling:
+        // 1. Jump buffering lets a jump press just before landing still fire.
+        // 2. Coyote time lets the player jump just after leaving ground.
+        // 3. groundContactTimer covers bouncy contact frames where the slime
+        //    visually touches ground but rebound might set grounded false.
+        if (game.input.jumpPressed) this.jumpBufferTimer = 0.16;
+        else this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - dt);
+
+        if (this.grounded || this.groundContactTimer > 0) this.coyoteTimer = 0.12;
+        else this.coyoteTimer = Math.max(0, this.coyoteTimer - dt);
+
+        const wantsJump = this.jumpBufferTimer > 0 && (this.grounded || this.coyoteTimer > 0 || this.groundContactTimer > 0);
+
+        this.applyMovement(dt, { move, jump: wantsJump, allowCoyote: this.coyoteTimer > 0 }, game);
+        this.physicsStep(dt, game);
+        this.growthPulse = Math.max(0, this.growthPulse - dt);
+        this.regenPulse = Math.max(0, this.regenPulse - dt);
+      }
+
+      collectDrop(value, game) {
+        const dropSize = Math.max(1, Math.min(5, Math.round(value)));
+        const massGain = dropSize * 0.5;
+        this.dropsCollected += 1;
+        this.massCollected += massGain;
+        this.growthEnergy += massGain;
+        this.bioMass += massGain;
+        game.score += Math.floor(10 * dropSize);
+
+        // SlimeDrops are now also the healing system. There is no passive timer.
+        // Collecting 2.5 mass worth of drops restores one heart, so big drops
+        // matter but small drops still contribute. Healing does not stockpile
+        // past full health.
+        if (this.hearts < this.maxHearts) {
+          this.healEnergy += massGain;
+          let healed = false;
+          while (this.healEnergy >= this.healNeededPerHeart && this.hearts < this.maxHearts) {
+            this.healEnergy -= this.healNeededPerHeart;
+            this.hearts += 1;
+            healed = true;
+          }
+          if (healed) {
+            this.regenPulse = 0.38;
+            this.wobbleEnergy += 0.11;
+            this.squash += 0.04;
+            game.particles.splash(this.x, this.y + this.radius * 0.35, '#93ffb0', 7, 0.34);
+            game.audio.blip(610, 0.045, 'sine', 0.02);
+          }
+        } else {
+          this.healEnergy = 0;
+        }
+
+        const oldRadius = this.radius;
+        this.radius = Math.min(this.maxRadius, Util.radiusFromBioMass(this.bioMass));
+        const gainedRadius = Math.max(0, this.radius - oldRadius);
+
+        // Slower premium-feeling growth: drop sizes still read as 1-5,
+        // but their actual mass gain is half-size: 1 => +0.5, 5 => +2.5.
+        this.growthPulse = 0.32;
+        this.squash += 0.045 + gainedRadius * 0.020;
+        this.wobbleEnergy += 0.10 + massGain * 0.030;
+        game.camera.addShake(0.22 + gainedRadius * 0.22);
+        game.particles.burst(this.x, this.y, "#aaff6b", 3 + dropSize);
+        game.particles.splash(this.x, this.y + this.radius, "#b7ff5a", 4 + dropSize, 0.34 + dropSize * 0.035);
+        game.audio.blip(500 + dropSize * 45 + Math.random() * 60, 0.04, "sine", 0.022);
+        if (gainedRadius > 0.45) game.audio.blip(230 + this.radius * 2.5, 0.06, "triangle", 0.026);
+      }
+
+      takePlayerDamage(attacker, game) {
+        if (this.invincible > 0 || this.dead) return;
+        const required = CombatSystem.hitsRequired(attacker, this);
+        const damage = required === 1 ? 3 : required === 2 ? 2 : 1;
+        this.hearts = Math.max(0, this.hearts - damage);
+        this.regenPulse = 0;
+        this.invincible = 1.25;
+        this.eyeCrossTimer = 0.55;
+        this.squash += 0.52;
+        this.sideSquish += 0.12;
+        this.wobbleEnergy += 0.42;
+        this.vx = (this.x - attacker.x) * 3.2;
+        this.vy = -470;
+        game.camera.addShake(5);
+        game.particles.splash(this.x, this.y, "#ff5d8f", 16, 0.78);
+        game.audio.blip(80, 0.16, "sawtooth", 0.055);
+
+        if (this.hearts <= 0) {
+          this.dead = true;
+          game.particles.burst(this.x, this.y, this.color, 44);
+          game.endGame();
+        }
+      }
+    }
+
+    class EnemySlime extends SlimeEntity {
+      constructor(x, y, radius, colorPair) {
+        super({ x, y, radius, color: colorPair[0], darkColor: colorPair[1], isPlayer: false });
+        this.aiTimer = Util.rand(0.2, 1.1);
+        this.moveIntent = Util.choice([-1, 1]);
+        this.jumpIntent = false;
+        this.kindOffset = Math.random() * 999;
+        this.bioMass = Util.bioMassFromRadius(radius);
+        this.growthEnergy = 0;
+      }
+
+      growFromDrop(value, game) {
+        const dropSize = Math.max(1, Math.min(5, Math.round(value)));
+        const massGain = dropSize * 0.5;
+        this.growthEnergy += massGain;
+        this.bioMass += massGain;
+        const cap = Math.min(104, game.player.radius * 1.42);
+        const oldRadius = this.radius;
+        this.radius = Math.min(cap, Util.radiusFromBioMass(this.bioMass));
+        if (this.radius > oldRadius + 0.05) {
+          this.growthPulse = 0.25;
+          this.squash += 0.035;
+          this.wobbleEnergy += 0.09 + massGain * 0.022;
+          game.particles.splash(this.x, this.y + this.radius, this.color, 4 + dropSize, 0.34);
+        }
+      }
+
+      update(dt, game) {
+        if (this.dead) return;
+        this.aiTimer -= dt;
+        const player = game.player;
+        const dx = player.x - this.x;
+        const distance = Math.abs(dx);
+        const ratio = this.radius / player.radius;
+
+        if (this.aiTimer <= 0) {
+          this.aiTimer = Util.rand(0.55, 1.4);
+          if (ratio < 0.82 && distance < 520) {
+            this.moveIntent = -Util.sign(dx); // flee when much smaller
+          } else if (ratio > 1.12 && distance < 760) {
+            this.moveIntent = Util.sign(dx); // chase when bigger
+          } else if (distance < 470) {
+            this.moveIntent = Math.random() < 0.65 ? Util.sign(dx) : Util.choice([-1, 1]);
+          } else {
+            this.moveIntent = Util.choice([-1, 0, 1]);
+          }
+
+          // Goofy jump timing: squash before jumping is represented by a quick
+          // visual compression before impulse on the next update.
+          this.jumpIntent = this.grounded && Math.random() < (distance < 520 ? 0.52 : 0.22);
+          if (this.jumpIntent) this.squash += 0.10;
+        }
+
+        // Small enemies greedily chase nearby drops sometimes.
+        if (ratio < 0.95) {
+          let nearest = null;
+          let nearestD = 250;
+          for (const drop of game.drops) {
+            if (drop.collected) continue;
+            const d = Math.abs(drop.x - this.x) + Math.abs(drop.y - this.y) * 0.3;
+            if (d < nearestD) { nearestD = d; nearest = drop; }
+          }
+          if (nearest && Math.random() < 0.75) this.moveIntent = Util.sign(nearest.x - this.x);
+        }
+
+        this.applyMovement(dt, { move: this.moveIntent, jump: this.jumpIntent }, game);
+        this.jumpIntent = false;
+        this.physicsStep(dt, game);
+
+        // Enemies can absorb SlimeDrops too, so the world feels like a small
+        // ecosystem instead of only a player-centered pickup field.
+        for (const drop of game.drops) {
+          if (drop.collected) continue;
+          if (Util.dist(this.x, this.y, drop.x, drop.y) < this.radius + drop.radius) {
+            drop.collected = true;
+            this.growFromDrop(drop.value, game);
+            break;
+          }
+        }
+      }
+    }
+
+    /**********************************************************************
+     * Combat System
+     **********************************************************************/
+    class CombatSystem {
+      static hitsRequired(attacker, victim) {
+        // One-shot kills should feel like a real mass advantage, not just
+        // slightly bigger touching slightly smaller. Instant kill requires 1.5x size.
+        if (attacker.radius >= victim.radius * 1.5) return 1;
+        if (attacker.radius < victim.radius) return 3;
+        return 2;
+      }
+
+      static isValidTopStomp(attacker, victim) {
+        const dx = victim.x - attacker.x;
+        const dy = victim.y - attacker.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance <= 0.0001) return false;
+
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const horizontalOffset = Math.abs(dx);
+
+        // More direct top contact, not side brushing. The offset window scales
+        // with both slime sizes, so it stays playable as bodies grow.
+        const directTopWindow = victim.radius * 0.72 + attacker.radius * 0.32;
+        const attackerClearlyAbove = dy > victim.radius * 0.42;
+        const footAboveVictimCenter = attacker.y + attacker.radius * 0.45 < victim.y;
+        const fallingIntoVictim = attacker.vy > 135;
+        const contactNormalIsTopward = ny > 0.58 && Math.abs(nx) < 0.82;
+
+        return fallingIntoVictim && attackerClearlyAbove && footAboveVictimCenter && horizontalOffset < directTopWindow && contactNormalIsTopward;
+      }
+
+      static resolveSlimePair(a, b, game) {
+        if (a.dead || b.dead) return;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const d = Math.hypot(dx, dy);
+        const minD = a.radius + b.radius;
+        if (d >= minD || d <= 0.0001) return;
+
+        const now = game.time;
+        const overlap = minD - d;
+        const nx = dx / d;
+        const ny = dy / d;
+
+        // Top-impact stomp test. This is intentionally stricter than a basic
+        // "center is slightly above" check. The attacker must land from a clear
+        // upper angle with enough downward motion, so side bumps do not count,
+        // but the allowed horizontal window is still generous enough to feel fair.
+        const aStompsB = CombatSystem.isValidTopStomp(a, b);
+        const bStompsA = CombatSystem.isValidTopStomp(b, a);
+
+        if (aStompsB && CombatSystem.canStomp(a, b, now)) {
+          CombatSystem.registerStomp(a, b, game);
+          return;
+        }
+
+        if (bStompsA && CombatSystem.canStomp(b, a, now)) {
+          CombatSystem.registerStomp(b, a, game);
+          return;
+        }
+
+        // Soft side pushback so blobs do not merge permanently.
+        const totalMass = a.mass + b.mass;
+        const aPush = (b.mass / totalMass) * overlap;
+        const bPush = (a.mass / totalMass) * overlap;
+        a.x -= nx * aPush;
+        a.y -= ny * aPush * 0.35;
+        b.x += nx * bPush;
+        b.y += ny * bPush * 0.35;
+        // Gel contact response: stronger springy pushback plus directional
+        // side compression, so blobs look pressed by the surface they touch.
+        const relativeSpeed = Math.hypot(a.vx - b.vx, a.vy - b.vy);
+        const contactEnergy = Util.clamp(overlap / minD + relativeSpeed / 2100, 0.025, 0.22);
+        const impulse = 90 + contactEnergy * 115;
+        a.vx -= nx * impulse * (b.mass / totalMass);
+        b.vx += nx * impulse * (a.mass / totalMass);
+        a.vy -= ny * impulse * 0.11 * (b.mass / totalMass);
+        b.vy += ny * impulse * 0.11 * (a.mass / totalMass);
+        a.sideSquish += contactEnergy * Math.abs(nx) * 0.55;
+        b.sideSquish += contactEnergy * Math.abs(nx) * 0.55;
+        a.squash += contactEnergy * Math.max(0.10, Math.abs(ny)) * 0.55;
+        b.squash += contactEnergy * Math.max(0.10, Math.abs(ny)) * 0.55;
+        a.gelKickX -= nx * contactEnergy * 62;
+        b.gelKickX += nx * contactEnergy * 62;
+        a.wobbleEnergy += contactEnergy * 0.20;
+        b.wobbleEnergy += contactEnergy * 0.20;
+      }
+
+      static canStomp(attacker, victim, now) {
+        const key = victim.isPlayer ? "player" : victim.x.toFixed(0) + ":" + victim.y.toFixed(0);
+        const last = attacker.lastStompTimes.get(key) || -999;
+        if (now - last < 0.45) return false;
+        attacker.lastStompTimes.set(key, now);
+        return true;
+      }
+
+      static registerStomp(attacker, victim, game) {
+        attacker.vy = -Math.max(460, attacker.jumpPower * 0.72);
+        attacker.stretch += 0.18;
+        attacker.sideSquish += 0.045;
+        attacker.wobbleEnergy += 0.18;
+        game.camera.addShake(attacker.isPlayer || victim.isPlayer ? 3.4 : 1.5);
+
+        if (victim.isPlayer) {
+          victim.takePlayerDamage(attacker, game);
+        } else {
+          victim.takeStomp(attacker, game);
+        }
+      }
+    }
+
+    /**********************************************************************
+     * Spawn System
+     **********************************************************************/
+    class SpawnSystem {
+      constructor() {
+        this.dropTimer = 0;
+        this.enemyTimer = 0;
+        this.enemyColors = [
+          ["#ff5a7a", "#a51e43"],
+          ["#4db6ff", "#1665b5"],
+          ["#ffe05c", "#c58d18"],
+          ["#b56cff", "#6933ad"],
+          ["#ff964d", "#bf521a"],
+          ["#7bff55", "#32a923"]
+        ];
+      }
+
+      update(dt, game) {
+        this.dropTimer -= dt;
+        this.enemyTimer -= dt;
+
+        if (this.dropTimer <= 0) {
+          this.dropTimer = Util.rand(0.35, 0.75);
+          if (game.drops.length < 95) this.spawnNaturalDrop(game);
+        }
+
+        const zone = Util.currentZone(game.player.bioMass);
+        const maxEnemies = CONFIG.maxEnemiesBase + zone.maxEnemiesBonus + Math.min(3, Math.floor((game.player.sizeScale - 1) * 0.8));
+        if (this.enemyTimer <= 0 && game.enemies.length < maxEnemies) {
+          // Spawn rate rises with growth, but mildly. The world should feel more
+          // populated as the player enters bigger slime zones, not unfairly crowded.
+          const zoneIndex = Util.zoneForMass(game.player.bioMass);
+          this.enemyTimer = Util.rand(1.45, 2.75) / (1 + zoneIndex * 0.08);
+          this.spawnEnemy(game);
+        }
+      }
+
+      spawnNaturalDrop(game) {
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const x = game.player.x + side * Util.rand(220, 1050);
+        const ground = game.terrain.groundY(x);
+        const y = ground - Util.rand(50, 160);
+        const value = Util.weightedDropValue();
+        const drop = new SlimeDrop(x, y, value, Util.choice(["#93ff74", "#7fffd4", "#d8ff5d", "#c6ff62"]));
+        drop.vx *= 0.25;
+        drop.vy = Util.rand(-50, 50);
+        game.drops.push(drop);
+      }
+
+      spawnEnemy(game) {
+        const player = game.player;
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const x = player.x + side * Util.rand(CONFIG.spawnSafeDistance, CONFIG.spawnSafeDistance + 520);
+        const ground = game.terrain.groundY(x);
+        const zoneIndex = Util.zoneForMass(player.bioMass);
+        const zone = CONFIG.growthZones[zoneIndex];
+        const categoryRoll = Math.random();
+        let ratio;
+
+        // Spore-like scale staging: when you are small, genuinely large enemies
+        // are mostly background silhouettes. As you grow, the active ecosystem
+        // allows more large slimes, but the increase is gradual.
+        const largeChance = zone.largeChance;
+        const similarChance = 0.36;
+        if (categoryRoll < (1 - similarChance - largeChance)) {
+          ratio = Util.rand(0.64, 0.88);       // edible pressure relief
+        } else if (categoryRoll < (1 - largeChance)) {
+          ratio = Util.rand(0.90, 1.14);       // fair same-order fight
+        } else {
+          ratio = Util.rand(zone.bigMin, zone.bigMax); // larger threat for this zone
+        }
+
+        // Keep enemies in the current active zone. Truly massive creatures are
+        // suggested in the background first, then become interactable later.
+        const radius = Util.clamp(player.radius * ratio, 20, Math.max(42, player.radius * zone.bigMax));
+        const enemy = new EnemySlime(x, ground - radius, radius, Util.choice(this.enemyColors));
+        enemy.vx = -side * Util.rand(40, 120);
+        game.enemies.push(enemy);
+      }
+    }
+
+    /**********************************************************************
+     * Game State / Main loop
+     **********************************************************************/
+    class GameState {
+      constructor() {
+        this.canvas = document.getElementById("gameCanvas");
+        this.ctx = this.canvas.getContext("2d");
+        this.input = new InputManager();
+        this.save = new SaveSystem();
+        this.camera = new CameraSystem();
+        this.terrain = new Terrain();
+        this.particles = new ParticleSystem();
+        this.audio = new AudioSystem();
+        this.spawner = new SpawnSystem();
+        this.state = "menu";
+        this.time = 0;
+        this.last = performance.now();
+        this.player = null;
+        this.enemies = [];
+        this.drops = [];
+        this.score = 0;
+        this.defeats = 0;
+        this.survivalTime = 0;
+        this.bestRunSize = 1;
+        this.currentZoneIndex = 0;
+        this.zoneBannerTimer = 0;
+
+        this.bindUI();
+        this.resize();
+        window.addEventListener("resize", () => this.resize());
+        requestAnimationFrame((t) => this.loop(t));
+      }
+
+      bindUI() {
+        const menuScreen = document.getElementById("menuScreen");
+        const helpScreen = document.getElementById("helpScreen");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const hud = document.getElementById("hud");
+        const mobileControls = document.getElementById("mobileControls");
+
+        this.ui = { menuScreen, helpScreen, gameOverScreen, hud, mobileControls };
+
+        document.getElementById("playButton").addEventListener("click", () => this.startGame());
+        document.getElementById("helpPlayButton").addEventListener("click", () => this.startGame());
+        document.getElementById("againButton").addEventListener("click", () => this.startGame());
+        document.getElementById("howButton").addEventListener("click", () => this.showScreen("help"));
+        document.getElementById("helpBackButton").addEventListener("click", () => this.showScreen("menu"));
+        document.getElementById("overMenuButton").addEventListener("click", () => this.showScreen("menu"));
+        document.getElementById("pauseToMenuButton").addEventListener("click", () => this.quitToMenu());
+        document.getElementById("resetButton").addEventListener("click", () => {
+          if (confirm("Reset Get Slimed! best score on this device?")) {
+            this.save.reset();
+            this.refreshBestUI();
+          }
+        });
+
+        this.refreshBestUI();
+      }
+
+      resize() {
+        const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        this.canvas.width = Math.floor(innerWidth * ratio);
+        this.canvas.height = Math.floor(innerHeight * ratio);
+        this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        // Store CSS-space size for all drawing/logic that uses canvas dimensions.
+        this.canvas.cssWidth = innerWidth;
+        this.canvas.cssHeight = innerHeight;
+      }
+
+      showScreen(name) {
+        this.state = name === "game" ? "playing" : name;
+        this.ui.menuScreen.classList.toggle("active", name === "menu");
+        this.ui.helpScreen.classList.toggle("active", name === "help");
+        this.ui.gameOverScreen.classList.toggle("active", name === "gameover");
+        this.ui.hud.classList.toggle("active", name === "game");
+        this.ui.mobileControls.classList.toggle("active", name === "game" && this.input.isTouchDevice);
+        this.updateOrientationHint();
+      }
+
+      updateOrientationHint() {
+        const hint = document.getElementById("orientationHint");
+        const portraitTouch = this.input.isTouchDevice && innerHeight > innerWidth && this.state === "playing";
+        hint.classList.toggle("active", portraitTouch);
+      }
+
+      refreshBestUI() {
+        document.getElementById("bestScoreText").textContent = String(this.save.data.bestScore);
+        document.getElementById("bestSizeText").textContent = `${this.save.data.bestSize.toFixed(2)}x`;
+        document.getElementById("bestDefeatsText").textContent = String(this.save.data.bestDefeats);
+      }
+
+      startGame() {
+        this.audio.ensure();
+        this.input.releaseAll();
+        this.time = 0;
+        this.survivalTime = 0;
+        this.score = 0;
+        this.defeats = 0;
+        this.bestRunSize = 1;
+        this.player = new PlayerSlime(0, 0);
+        this.currentZoneIndex = Util.zoneForMass(this.player.bioMass);
+        this.zoneBannerTimer = 0;
+        const ground = this.terrain.groundY(0);
+        this.player.y = ground - this.player.radius;
+        this.enemies = [];
+        this.drops = [];
+        this.particles = new ParticleSystem();
+        this.spawner = new SpawnSystem();
+        this.camera.x = -innerWidth * 0.42;
+        this.camera.y = ground - innerHeight * 0.56;
+
+        // Starter drops and enemies make the MVP immediately playable.
+        for (let i = 0; i < 30; i++) {
+          const x = Util.rand(-520, 850);
+          const y = this.terrain.groundY(x) - Util.rand(45, 155);
+          this.drops.push(new SlimeDrop(x, y, Util.weightedDropValue(), Util.choice(["#b7ff5a", "#7fffd4", "#93ff74", "#d8ff5d"])));
+        }
+        for (let i = 0; i < 5; i++) this.spawner.spawnEnemy(this);
+
+        this.showScreen("game");
+      }
+
+      quitToMenu() {
+        if (this.state === "playing") {
+          this.save.saveRun(this.score, this.bestRunSize, this.defeats);
+          this.refreshBestUI();
+        }
+        this.showScreen("menu");
+      }
+
+      endGame() {
+        if (this.state !== "playing") return;
+        this.state = "gameover-pending";
+        this.save.saveRun(this.score, this.bestRunSize, this.defeats);
+        this.refreshBestUI();
+        setTimeout(() => this.showGameOver(), 650);
+      }
+
+      showGameOver() {
+        document.getElementById("finalScoreText").textContent = String(Math.floor(this.score));
+        document.getElementById("finalSizeText").textContent = `${this.bestRunSize.toFixed(2)}x`;
+        document.getElementById("finalTimeText").textContent = `${this.survivalTime.toFixed(1)}s`;
+        document.getElementById("finalDropsText").textContent = String(this.player ? this.player.dropsCollected : 0);
+        document.getElementById("finalDefeatsText").textContent = String(this.defeats);
+        document.getElementById("finalBestText").textContent = String(this.save.data.bestScore);
+        document.getElementById("gameOverSummary").textContent = this.defeats > 0
+          ? "You absorbed rival slimes, grew bigger, then got splattered by the ecosystem. Respectable goo behavior."
+          : "You became part of the food chain. The slime world is not gentle.";
+        this.showScreen("gameover");
+      }
+
+      loop(timestamp) {
+        const rawDt = Math.min(0.033, (timestamp - this.last) / 1000 || 0.016);
+        this.last = timestamp;
+        this.input.update();
+        if (this.state === "playing") this.update(rawDt);
+        this.draw();
+        requestAnimationFrame((t) => this.loop(t));
+      }
+
+      update(dt) {
+        this.time += dt;
+        this.survivalTime += dt;
+        this.score += dt * 1.4;
+        this.bestRunSize = Math.max(this.bestRunSize, this.player.sizeScale);
+        this.checkZoneProgression(dt);
+        this.updateOrientationHint();
+
+        this.player.update(dt, this);
+        for (const enemy of this.enemies) enemy.update(dt, this);
+        for (const drop of this.drops) drop.update(dt, this);
+        this.particles.update(dt);
+        this.spawner.update(dt, this);
+        this.resolveCombat();
+        this.cleanup();
+        this.camera.update(dt, this.player, { width: innerWidth, height: innerHeight });
+        this.updateHUD();
+      }
+
+      checkZoneProgression(dt) {
+        const nextZone = Util.zoneForMass(this.player.bioMass);
+        if (nextZone > this.currentZoneIndex) {
+          this.currentZoneIndex = nextZone;
+          const zone = CONFIG.growthZones[nextZone];
+          this.zoneBannerTimer = 2.4;
+          const banner = document.getElementById("zoneBanner");
+          banner.textContent = `New zone: ${zone.name}`;
+          banner.classList.add("active");
+          this.camera.addShake(4.5);
+          this.particles.burst(this.player.x, this.player.y, "#b7ff5a", 34);
+          this.audio.blip(260 + nextZone * 90, 0.12, "triangle", 0.04);
+        }
+
+        if (this.zoneBannerTimer > 0) {
+          this.zoneBannerTimer -= dt;
+          if (this.zoneBannerTimer <= 0) document.getElementById("zoneBanner").classList.remove("active");
+        }
+      }
+
+      resolveCombat() {
+        for (const enemy of this.enemies) CombatSystem.resolveSlimePair(this.player, enemy, this);
+        for (let i = 0; i < this.enemies.length; i++) {
+          for (let j = i + 1; j < this.enemies.length; j++) {
+            CombatSystem.resolveSlimePair(this.enemies[i], this.enemies[j], this);
+          }
+        }
+      }
+
+      cleanup() {
+        this.drops = this.drops.filter((drop) => !drop.collected && Math.abs(drop.x - this.player.x) < 2500 && drop.y < 1400);
+        this.enemies = this.enemies.filter((enemy) => !enemy.dead && Math.abs(enemy.x - this.player.x) < 2600 && enemy.y < 1400);
+      }
+
+      updateHUD() {
+        document.getElementById("scoreHud").textContent = `Score ${Math.floor(this.score)}`;
+        document.getElementById("sizeHud").textContent = `Mass ${this.player.bioMass.toFixed(1)} | Size ${this.player.sizeScale.toFixed(2)}x`;
+        document.getElementById("dropHud").textContent = `Drops ${this.player.dropsCollected} (+${(this.player.massCollected || 0).toFixed(1)} mass)`;
+        document.getElementById("enemyHud").textContent = `Defeated ${this.defeats}`;
+        const fullHearts = Math.max(0, this.player.hearts);
+        const emptyHearts = Math.max(0, this.player.maxHearts - this.player.hearts);
+        const healText = this.player.hearts < this.player.maxHearts && !this.player.dead
+          ? ` drops heal ${this.player.healEnergy.toFixed(1)}/${this.player.healNeededPerHeart}`
+          : "";
+        document.getElementById("heartHud").textContent = this.player.hearts > 0
+          ? `${"💚".repeat(fullHearts)}${"🖤".repeat(emptyHearts)}${healText}`
+          : "💀";
+        const zoneIndex = Util.zoneForMass(this.player.bioMass);
+        const zone = CONFIG.growthZones[zoneIndex];
+        document.getElementById("zoneHud").textContent = `Zone ${zoneIndex + 1} · ${zone.name}`;
+      }
+
+      draw() {
+        const ctx = this.ctx;
+        const canvasInfo = { width: innerWidth, height: innerHeight };
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        this.terrain.draw(ctx, this.camera, canvasInfo, this.player ? this.currentZoneIndex : 0);
+
+        if (!this.player) {
+          this.drawIdlePreview(ctx);
+          return;
+        }
+
+        for (const drop of this.drops) drop.draw(ctx, this.camera, this.time);
+
+        // Draw smaller/farther entities first based on y for mild depth ordering.
+        const slimes = [this.player, ...this.enemies].filter((s) => !s.dead).sort((a, b) => a.y - b.y);
+        for (const slime of slimes) slime.draw(ctx, this.camera, this.time);
+
+        this.particles.draw(ctx, this.camera);
+
+        if (this.player.growthPulse > 0) {
+          const alpha = this.player.growthPulse / 0.32;
+          ctx.globalAlpha = alpha * 0.14;
+          ctx.strokeStyle = "#b7ff5a";
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(this.camera.screenX(this.player.x), this.camera.screenY(this.player.y), this.player.radius * (1.55 - alpha * 0.30), 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        if (this.player.regenPulse > 0) {
+          const alpha = this.player.regenPulse / 0.38;
+          ctx.globalAlpha = alpha * 0.16;
+          ctx.strokeStyle = "#93ffb0";
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(this.camera.screenX(this.player.x), this.camera.screenY(this.player.y), this.player.radius * (1.30 + (1 - alpha) * 0.26), 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      drawIdlePreview(ctx) {
+        // Background keeps the menu from feeling like a blank overlay if the
+        // canvas peeks through on some browsers.
+        ctx.fillStyle = "#12091f";
+        ctx.fillRect(0, 0, innerWidth, innerHeight);
+      }
+    }
+
+    window.addEventListener("load", () => {
+      window.getSlimedGame = new GameState();
+    });
+  </script>
+</body>
+</html>

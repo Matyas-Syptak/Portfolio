@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="plant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biology — Design Portfolio</title>
+  <meta name="description" content="Matyas Syptak — Biology.">
+  <style media="(prefers-reduced-motion: no-preference)">@view-transition { navigation: auto; }</style>
+  <link rel="stylesheet" href="styles/site.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link id="portfolio-fonts" rel="stylesheet" media="print" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&amp;family=IBM+Plex+Mono:wght@500;700&amp;family=Inter:wght@400..600&amp;display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&amp;family=IBM+Plex+Mono:wght@500;700&amp;family=Inter:wght@400..600&amp;display=swap"></noscript>
+  <script src="scripts/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header>
+    <a class="site-name" href="./">Design Portfolio</a>
+    <nav aria-label="Main navigation">
+      <a href="./">Home</a>
+      <a href="projects.html">My Projects</a>
+      <a href="biology.html" aria-current="page">Biology</a>
+      <a href="game-development.html">Game Development</a>
+    </nav>
+  </header>
+  <main id="main">
+    <div class="hero">
+      <canvas class="ink-marbling" aria-hidden="true"></canvas>
+      <canvas id="backdrop" aria-hidden="true"></canvas>
+      <div class="intro-layout">
+        <div class="identity">
+          <h1 class="sr-only">Matyas Syptak</h1>
+          <div class="intro-name">
+            <div class="name-shell" id="hero-title-shell">
+              <svg id="liquid-name" viewBox="0 0 1050 178" preserveAspectRatio="xMinYMid meet" aria-hidden="true">
+                <defs>
+                  <text id="name-lettering" x="6" y="131">Matyas Syptak</text>
+                  <clipPath id="name-clip"><use href="#name-lettering"/></clipPath>
+                  <linearGradient id="name-fallback" x1="0%" y1="12%" x2="100%" y2="70%">
+                    <stop offset="0"/>
+                    <stop offset=".38"/>
+                    <stop offset=".70"/>
+                    <stop offset="1"/>
+                  </linearGradient>
+                </defs>
+                <use href="#name-lettering" fill="url(#name-fallback)"/>
+                <foreignObject class="name-reaction" width="100%" height="100%" clip-path="url(#name-clip)">
+                  <canvas id="hero-shader-canvas" aria-hidden="true"></canvas>
+                </foreignObject>
+                <use class="name-tint" href="#name-lettering"/>
+                <use class="name-outline" href="#name-lettering"/>
+              </svg>
+            </div>
+            <p class="hero-study-line">
+              <span class="hero-study-piece hero-study-piece--field">
+                Cell &amp; Molecular Biology at
+              </span>
+              <span class="study-schools">
+              <span class="hero-study-piece hero-study-piece--duke">
+                Duke University
+              </span>
+              <span
+                class="hero-study-dot"
+                aria-hidden="true"
+              >
+                ·
+              </span>
+              <span class="hero-study-piece hero-study-piece--dku">
+                Duke Kunshan University
+              </span>
+              </span>
+            </p>
+          </div>
+          <h2>Biology</h2>
+        </div>
+        <nav class="page-links" aria-label="Other sections">
+          <a class="page-link" href="projects.html">
+            <span>My Projects</span><span class="tile-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="page-link" href="game-development.html">
+            <span>Game Development</span><span class="tile-arrow" aria-hidden="true">→</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+    <section class="page-content biology-content" aria-label="Research">
+      <details class="reading-list">
+        <summary>Papers I’ve been reading</summary>
+        <ul>
+          <li>
+            <a href="https://doi.org/10.1038/s41598-017-16530-y">Enhancement of Power Output by using Alginate Immobilized Algae in Biophotovoltaic Devices</a>
+            <span>Ng et al. · 2017</span>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1038/s41467-025-61086-5">Three-dimensional conductive conjugated polyelectrolyte gels facilitate interfacial electron transfer for improved biophotovoltaic performance</a>
+            <span>Chen et al. · 2025</span>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1038/s41467-022-30764-z">Order-of-magnitude enhancement in photocurrent generation of <i>Synechocystis</i> sp. PCC 6803 by outer membrane deprivation</a>
+            <span>Kusama et al. · 2022</span>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1016/j.cell.2006.07.024">Induction of Pluripotent Stem Cells from Mouse Embryonic and Adult Fibroblast Cultures by Defined Factors</a>
+            <span>Takahashi and Yamanaka · 2006</span>
+          </li>
+        </ul>
+      </details>
+
+      <article class="lab-entry">
+        <h3>Kuang Lab</h3>
+        <p class="entry-meta">Professor Shihuan Kuang · Duke University</p>
+        <p>I help investigate how PTEN affects skeletal muscle stem cells and muscle regeneration. My work includes PCR genotyping, myoblast culture, and immunofluorescence staining and imaging of muscle cryosections. I analyze fluorescence images and experimental data to help compare PTEN-knockout and control samples.</p>
+      </article>
+
+      <article class="lab-entry">
+        <h3>Climate Resilient Agricultural Engineering (CReAtE) Lab</h3>
+        <p class="entry-meta">Dr. Eunyu Kim · Duke Kunshan University, China</p>
+        <p>I work on identifying cultured microalgae. I assemble and interpret Sanger sequences, compare them with reference sequences, and build phylogenetic trees to evaluate possible species assignments. I also review research on microalgae and biophotovoltaics, including how photosynthetic organisms transfer electrons to electrodes.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
